@@ -1,0 +1,216 @@
+<style lang="less">
+@import '../styles/commit';
+</style>
+<template>
+    <view class="commit">
+
+        <view class="commit-li active" wx:for="{{cartList}}" wx:for-index="index" wx:for-item="cart">
+          <view class="menu-img">
+            <image src="{{cart.goods.imgUrl[0]}}" mode="scaleToFill"
+              lazy-load="false">
+            </image>
+          </view>
+           <view class="menu-info">
+             <view>
+               {{cart.goods.name}}
+            </view>
+            <view>
+              ￥{{cart.goods.price}}
+            </view>
+          </view>
+          <view class="menu-control">
+             <view>
+               <i class="iconfont icon-jian-copy"></i>
+                <view>{{cart.counter}} </view>
+                <i class="iconfont icon-jia1"></i>
+              </view>
+              <view>
+                  <i class="iconfont icon-shanchu"></i>
+              </view>
+          </view>
+        </view>
+        
+         
+        <blank></blank>
+        <view class="order-info">  
+            <view class="memo">
+              <view>备注</view>
+              <input type="text" placeholder="填写备注信息" bindinput='desc'/>
+            </view>
+             <view class="z-number">
+              <view>桌号</view>
+              <view>02</view>
+            </view>
+            <view class="change">
+              <view>金币兑换</view>
+            </view>
+             <view class="total">
+              <view>共计</view>
+              <view>￥{{payAmount}}</view>
+            </view>
+             <view class="fk">
+              <view>应付</view>
+              <view>游戏金币已抵换{{exchangemoney}}元</view>
+              <view>￥{{realcost}}</view>
+            </view>
+        </view>
+        <view class="commit-zf">
+          <button @tap="createOrder">确认支付</button>
+        </view>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import blank from '@/components/blank';
+import tip from '@/utils/tip';
+import publicApi from '@/api/publicApi';
+import NetWork from '@/utils/wxHttp';
+export default class Commit extends wepy.page {
+  config = {
+    navigationBarTitleText: '提交订单',
+    backgroundTextStyle: 'light',
+    navigationBarBackgroundColor: '#66C693',
+    navigationBarTextStyle: 'white',
+    disableScroll: false
+  };
+  components = {
+    blank
+  };
+
+  data = {
+    cartList: [],
+    gold: 0,
+    exchangemoney: 0,
+    payAmount: 0,
+    realcost: 0,
+    userId: '',
+    openid: '',
+    exchanged: 0,
+    desc: ''
+  };
+  calculateFee(userId, cartInfo, exchanged, storeId) {
+    tip.loading();
+    NetWork.wxHttp2(
+      'GET',
+      {
+        userId,
+        storeId,
+        cartInfo,
+        exchanged
+      },
+      publicApi.calculateFee
+    )
+      .then(res => {
+        if (res.code == 200) {
+          tip.loaded();
+          this.$apply();
+          let { gold, exchangemoney, payAmount, realcost } = res.data;
+          this.gold = gold;
+          this.exchangemoney = exchangemoney;
+          this.payAmount = payAmount;
+          this.realcost = realcost;
+        } else {
+          tip.loaded();
+          return tip.error(res.msg, false);
+        }
+      })
+      .catch(e => {
+        tip.loaded();
+        return tip.error(e, false);
+      });
+  }
+
+  onLoad(options) {
+    let list = JSON.parse(options.cartList);
+
+    this.cartList = list;
+    let user = wx.getStorageSync('user');
+    let { miniUserId, openid } = user;
+    this.userId = miniUserId;
+    this.openid = openid;
+    this.calculateFee(miniUserId, JSON.stringify(list), 0, 8);
+  }
+
+  //下单
+  createOrder() {
+    tip.loading();
+    let storeId = 8;
+    let { userId, openid, exchanged, gold, cartList, desc } = this;
+    if (!userId) {
+      tip.loaded();
+      return tip.alert('用户不存在');
+    }
+    if (!storeId) {
+      tip.loaded();
+      return tip.alert('店铺不存在');
+    }
+    if (!openid) {
+      tip.loaded();
+      return tip.alert('用户未登陆');
+    }
+    let shopData = [];
+    cartList.map(cart => {
+      shopData.push({
+        goods_id: cart.goods.goodsId,
+        goods_name: cart.goods.name,
+        img: cart.goods.imgUrl[0],
+        num: cart.counter,
+        price: cart.goods.price
+      });
+    });
+    if (shopData.length == 0) {
+      tip.loaded();
+      return tip.alert('请重新选择商品进行购买');
+    }
+    console.log(shopData);
+    NetWork.wxHttp2(
+      'POST',
+      {
+        storeId,
+        openid,
+        userId,
+        shopData: JSON.stringify(shopData),
+        exchanged,
+        consumecoins: gold,
+        desc
+      },
+      publicApi.creatOder
+    )
+      .then(result => {
+        if (result.code == 200) {
+          tip.loaded();
+          wx.requestPayment({
+            timeStamp: result.data.timeStamp,
+            nonceStr: result.data.nonceStr,
+            package: result.data.package,
+            signType: 'MD5',
+            paySign: result.data.paySign,
+            success(res) {
+              wx.redirectTo({
+                url: 'payment?sn=' + result.data.wx_trade_no
+              });
+            },
+            fail(res) {
+              tip.loaded();
+              tip.error('取消支付', false);
+            }
+          });
+        } else {
+          tip.loaded();
+          return tip.error(result.msg, false);
+        }
+      })
+      .catch(e => {
+        tip.loaded();
+        return tip.error(e, false);
+      });
+  }
+
+  methods = {
+    desc(e) {
+      this.desc = e.detail.value;
+    }
+  };
+}
+</script>
+

@@ -1,0 +1,72 @@
+<style lang="less">
+@import '../styles/payment';
+</style>
+<template>
+    <view class="payment">
+            <view class="payment-top">
+                 <view class="payment-success">
+                     <i class="iconfont icon-zhifuchenggong"></i>
+                     支付成功
+                </view>
+                <view class="payment-dol">
+                        实付￥{{order.realcost}}
+                </view>
+            </view>
+            <view class="payment-bottom">
+                    <view>
+                        <image src="../assets/payment/game.png" mode="scaleToFill"
+                          lazy-load="false">
+                        </image>
+                    </view>
+                  <view>
+                      <view>进入游戏</view>
+                      
+                      <view @tap="goIndex">返回首页</view>
+                  </view>  
+            </view> 
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import tip from '@/utils/tip';
+import publicApi from '@/api/publicApi';
+import NetWork from '@/utils/wxHttp'
+export default class Payment extends wepy.page {
+    config = {
+      navigationBarTitleText: '支付成功',
+      backgroundTextStyle: 'light',
+      navigationBarBackgroundColor: '#66C693',
+      navigationBarTextStyle: 'white',
+      disableScroll: true
+    };
+    data = {
+
+      order:{},
+    }
+    onLoad(options){
+      tip.loading();
+      let sn = options.sn;
+      NetWork.wxHttp2('GET',{sn},publicApi.paySuccess).then(res=>{
+        if(res.code == 200){
+          tip.loaded();
+          this.order = res.data;
+          this.$apply();
+        }else{
+          tip.loaded();
+          return tip.error(res.msg,false);
+        }
+      }).catch(e=>{
+        tip.loaded();
+        return tip.error(e,false);
+      })
+    }
+
+    //去首页
+    goIndex(){
+      wx.switchTab({
+        url:'index'
+      })
+    }
+}
+</script>
+

@@ -1,0 +1,566 @@
+<template>
+  <view>
+    <view scroll-x="true" class="tab-h">
+      <view class="tab-item {{currentTab==0?'active':''}}" data-current="0" @tap="swichNav">菜单</view>
+      <view class="tab-item {{currentTab==1?'active':''}}" data-current="1" @tap="swichNav">商家</view>
+      <view class="tab-item {{currentTab==2?'active':''}}" data-current="2" @tap="swichNav">游戏</view>
+    </view>
+    <swiper class="tab-content" current="{{currentTab}}" duration="300" @change="switchTab" style="height:{{winHeight}}rpx">
+      <swiper-item>
+        <scroll-view class="scoll-h">
+          <view class="menu-list-box">
+            <scroll-view scroll-y class="menu-title-list" style="height:{{menuHeight}}rpx">
+              <repeat for="{{typeList}}" key="index" index="index" item="item">
+                  <view class="s-menu" @tap="switchType" data-typeId="{{item.typeId}}">{{item.name}}</view>
+              </repeat>
+            </scroll-view>
+            <scroll-view scroll-y class="menu-ul" style="height:{{menuHeight}}rpx">
+              <repeat for="{{goodsList}}" key="index" index="index" item="item">
+                <repeat for="{{item.goodsList}}" key="index" index="index" item="goods">
+                    
+                
+                <view class="menu-li">
+                  <view class="image-box">
+                    <image src="{{goods.imgUrl[0]}}" mode="scaleToFill" />
+                  </view>
+                  <view class="menu-ms">
+                    <view class="menu-title">{{goods.name}}</view>
+                    <view class="control">
+                      <view>
+                        <view>￥{{goods.price}}</view>
+                        <view>元/份</view>
+                      </view>
+                      <view>
+                        <block >
+                          <i class="iconfont icon-jian-copy" @tap="cutCart" data-index="{{index}}"></i>
+                          <view>{{cartList[index].counter?cartList[index].counter:0}}</view>
+                        </block>
+                        <i class="iconfont icon-jia1" @tap="addCart" data-goods="{{goods}}"></i>
+                      </view>
+                    </view>
+                  </view>
+                </view>
+                </repeat>
+              </repeat>
+            </scroll-view>
+          </view>
+          <view class="shop-cat">
+            <view class="cat">
+              <view class="cart" catchtap='cartControl'>
+                <view>{{counter}}</view>
+                <i class="iconfont icon-cart"></i>
+              </view>
+              <view class="select-menu" wx:if="{{cartShow}}"  @tap='cartClose'>
+                <view class="menu-cart"  >
+                  <view class="menu-cart-box" catchtap='stand'>
+                    <view class="title">
+                      <view>购物车</view>
+                      <view catchtap='delete'>
+                        <i class="iconfont icon-shanchu"></i> 清空购物车
+                      </view>
+                    </view>
+
+                    <view class="menu-cart-list" wx:for="{{cartList}}" wx:for-index="idx" wx:for-item="cart">
+                      
+                          
+                      
+                        <view>{{cart.goods.name}}</view>
+                        <view>￥{{cart.goods.price}}</view>
+                        <view>
+                          <i class="iconfont icon-jian-copy" catchtap='minus' ></i>
+                          <view>{{cart.counter}}</view>
+                          <i class="iconfont icon-jia1" catchtap='add'></i>
+                        </view>
+                     
+                    </view>
+                  </view>
+                </view>
+              </view>
+            </view>
+            <view class="total" @tap="orderCommit">结算</view>
+          </view>
+        </scroll-view>
+      </swiper-item>
+
+      <swiper-item>
+        <scroll-view scroll-y="true" class="scoll-h">
+          <view class="store-info">
+            <image src="{{store.cover}}" mode="scaleToFill" />
+            <view class="store-info-detail">
+              <view>
+                <image src="{{store.avatar}}" mode="scaleToFill" />
+              </view>
+              <view class="store-text">
+                <view>{{store.storename}}</view>
+                <view>电话：{{store.phone}}</view>
+              </view>
+            </view>
+          </view>
+          <view class="hot-seller">本店热卖</view>
+          <scroll-view scroll-x="true" class="menu-h" scroll-left="{{scrollLeft}}">
+            <view class="menu-item" wx:for="{{store.goodsList}}" wx:for-item="goods">
+              <view>
+                <image src="{{goods.imgUrl[0]}}" mode="scaleToFill" />
+                <view>{{goods.name}}</view>
+              </view>
+            </view>
+
+            <!-- <view class="menu-item">
+              <view>
+                <image src="../assets/index/menu.png" mode="scaleToFill" />
+                <view>199元欢乐聚会套餐</view>
+              </view>
+            </view>
+
+            <view class="menu-item">
+              <view>
+                <image src="../assets/index/menu.png" mode="scaleToFill" />
+                <view>199元欢乐聚会套餐</view>
+              </view>
+            </view>
+
+            <view class="menu-item">
+              <view>
+                <image src="../assets/index/menu.png" mode="scaleToFill" />
+                <view>199元欢乐聚会套餐</view>
+              </view>
+            </view>
+            <view class="menu-item">
+              <view>
+                <image src="../assets/index/menu.png" mode="scaleToFill" />
+                <view>199元欢乐聚会套餐</view>
+              </view>
+            </view>
+            <view class="menu-item">
+              <view>
+                <image src="../assets/index/menu.png" mode="scaleToFill" />
+                <view>199元欢乐聚会套餐</view>
+              </view>
+            </view> -->
+          </scroll-view>
+          <blank></blank>
+          <view class="store-detail store-row-1">
+            <i class="iconfont icon-dianpu"></i>
+            <view class="store-item">店铺：</view>
+            <view class="store-flex">{{store.storename}}</view>
+          </view>
+          <view class="store-detail">
+            <i class="iconfont icon-dizhi"></i>
+            <view class="store-item">地址：</view>
+            <view class="store-flex">{{store.address}}</view>
+          </view>
+          <view class="store-detail">
+            <i class="iconfont icon-shijian"></i>
+            <view class="store-item-2">营业时间：</view>
+            <view class="store-flex">{{store.opentime}}-{{store.closetime}}</view>
+          </view>
+          <view class="store-detail">
+            <i class="iconfont icon-jinbi"></i>
+            <view class="store-item-2">金币退换规则：</view>
+            <view class="store-flex">通过小游戏通关获得金币，每通过一关 获得一个金币，{{store.goldRule.gold}}个金币抵用{{store.goldRule.money}}元钱。 用餐更优惠哦！通过小游戏通关获得金 币，每通过一关获得{{store.goldRule.gold}}个金币，一个金币抵用{{store.goldRule.gold}}元钱。用餐更优惠哦！</view>
+          </view>
+          <view class="store-blank"></view>
+        </scroll-view>
+      </swiper-item>
+      <swiper-item>
+        <scroll-view scroll-y="true" class="scoll-h">123123123回复的话</scroll-view>
+      </swiper-item>
+    </swiper>
+  </view>
+</template>
+
+<style lang="less">
+@import '../styles/index';
+.tab-h {
+  height: 80rpx;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  line-height: 80rpx;
+  background: #f7f7f7;
+  font-size: 16px;
+  white-space: nowrap;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99;
+}
+.tab-item {
+  margin: 0 36rpx;
+  display: inline-block;
+}
+.hot-seller {
+  margin-top: 27rpx;
+  height: 92rpx;
+  line-height: 92rpx;
+  padding-left: 20rpx;
+  font-size: 34rpx;
+  color: rgba(51, 51, 51, 1);
+}
+.menu-item {
+  display: inline-block;
+  height: 260rpx;
+  margin-left: 20rpx;
+  text-align: center;
+  width: 200rpx;
+  image {
+    width: 200rpx;
+    height: 138rpx;
+  }
+  > view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    > view {
+      font-size: 26rpx;
+      width: 149rpx;
+      height: 70rpx;
+      display: block;
+      white-space: pre-line;
+      line-height: 35rpx;
+      color: #333333;
+    }
+  }
+}
+.tab-item.active {
+  color: #66c693;
+  position: relative;
+}
+.tab-item.active:after {
+  content: '';
+  display: block;
+  height: 8rpx;
+  width: 52rpx;
+  background: #66c693;
+  position: absolute;
+  bottom: 0;
+  left: 5rpx;
+  border-radius: 16rpx;
+}
+.tab-content {
+  margin-top: 80rpx;
+}
+.scoll-h {
+  height: 100%;
+}
+.menu-h {
+  height: 260rpx;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  line-height: 80rpx;
+  background: #fff;
+  font-size: 16px;
+  white-space: nowrap;
+  z-index: 99;
+}
+</style>
+
+<script>
+import wepy from 'wepy';
+import { connect } from 'wepy-redux';
+import blank from '@/components/blank';
+import tip from '@/utils/tip';
+import publicApi from '@/api/publicApi';
+import NetWork from '@/utils/wxHttp';
+@connect({
+  num(state) {
+    return state.counter.num;
+  },
+  asyncNum(state) {
+    return state.counter.asyncNum;
+  },
+  sumNum(state) {
+    return state.counter.num + state.counter.asyncNum;
+  }
+})
+export default class Index extends wepy.page {
+  components = {
+    blank: blank
+  };
+  config = {
+    navigationBarTitleText: '贵阳德克士',
+    backgroundTextStyle: 'light',
+    navigationBarBackgroundColor: '#66C693',
+    navigationBarTextStyle: 'white',
+    disableScroll: true
+  };
+  methods = {
+    switchType(event) {
+      let typeId = event.currentTarget.dataset.typeid;
+      this.queryGoodsByTypeId(typeId);
+    },
+    addCart(event) {
+      this.counter = ++this.counter;
+      let goods = event.currentTarget.dataset.goods;
+      console.log(goods);
+      let list = this.cartList;
+      let exist = list.find(ele => {
+        return ele.goods.goodsId === goods.goodsId;
+      });
+      console.log(exist);
+      if (exist) {
+        exist.counter = ++exist.counter;
+      } else {
+        list.push({
+          goods: goods,
+          counter: 1
+        });
+      }
+
+      console.log(list);
+      this.cartList = list;
+    },
+    cutCart(event) {
+      this.counter = --this.counter;
+      let index = event.currentTarget.dataset.index;
+      this.cartList[index].counter == --this.cartList[index].counter;
+      if (this.cartList[index].counter == 0) {
+        this.cartList.splice(index, 1);
+      }
+      // this.cartList.map(item=>{
+      //   item.counter  = -- item.counter;
+      //    if( item.counter == 0){
+      //     this.cartList.splice(index,1);
+      //   }
+      // })
+
+      console.log(this.cartList);
+    },
+
+    //结算
+    orderCommit() {
+      if (this.cartList.length == 0) {
+        return tip.alert('请至少选择一件商品');
+      }
+      wx.navigateTo({
+        url: 'commit?cartList=' + JSON.stringify(this.cartList)
+      });
+    },
+    // 滚动切换标签样式
+    switchTab(e) {
+      this.currentTab = e.detail.current;
+      this.checkCor();
+    },
+    // 点击标题切换当前页时改变样式
+    swichNav(e) {
+      var cur = e.target.dataset.current;
+      if (this.currentTaB == cur) {
+        return false;
+      } else {
+        this.currentTab = cur;
+      }
+      if (cur == 1) {
+        tip.loading();
+        NetWork.wxHttp2('GET', { storeId: 8 }, publicApi.queryStoreInfo)
+          .then(res => {
+            if (res.code == 200) {
+              tip.loaded();
+              let store = res.data;
+              let list = store.goodsList;
+              list.map(goods => {
+                goods.imgUrl = JSON.parse(goods.imgUrl);
+              });
+              //store.list = list;
+              this.store = store;
+              this.$apply();
+            } else {
+              tip.loaded();
+              return tip.error(res.msg, false);
+            }
+          })
+          .catch(e => {
+            tip.loaded();
+            return tip.error(e, false);
+          });
+      }
+    },
+    delete() {
+      let that = this;
+      wx.showModal({
+        title: '提示',
+        content: '确定删除购物车数据吗',
+        success(res) {
+          if (res.confirm) {
+            that.cartList = [];
+            that.counter = 0;
+            that.$apply();
+          } else if (res.cancel) {
+            console.log('用户点击取消');
+          }
+        }
+      });
+    },
+    minus() {},
+    add() {},
+    cartControl() {
+      this.cartShow = !this.cartShow;
+    },
+    cartClose() {
+      this.cartShow = false;
+    },
+    stand() {
+      // 防止点击购物车被关闭
+    }
+  };
+  data = {
+    winHeight: '', //窗口高度
+    currentTab: 0, //预设当前项的值
+    scrollLeft: 0, //tab标题的滚动条位置
+    rpxR: 0,
+    menuHeight: 0,
+    cartShow: false,
+    typeList: [], //商品分类集合
+    typeId: '',
+    goodsList: [],
+    counter: 0,
+    cartList: [],
+    store: {}
+  };
+  components = {};
+  async onShow() {}
+  cacuPublic(str) {
+    return new Promise((resolve, reject) => {
+      let _this = this;
+      let query = wx.createSelectorQuery();
+      query
+        .select(str)
+        .boundingClientRect(function(res) {
+          //在这里做计算，res里有需要的数据
+          resolve(res['height'] || 0);
+        })
+        .exec();
+    });
+  }
+  caclMenuScrollHeight() {
+    let _this = this;
+    let query = wx.createSelectorQuery();
+    query
+      .select('.shop-cat')
+      .boundingClientRect(function(res) {
+        _this.menuHeight = _this.winHeight - res.height * _this.rpxR;
+        _this.$apply();
+      })
+      .exec();
+  }
+  checkCor() {
+    if (this.currentTab > 4) {
+      this.scrollLeft = 300;
+    } else {
+      this.scrollLeft = 0;
+    }
+  }
+  async sysInfo() {
+    let p = await this.cacuPublic('.tab-h');
+    var that = this;
+    return new Promise((resolve, reject) => {
+      wepy.getSystemInfo({
+        success: function(res) {
+          var clientHeight = res.windowHeight,
+            clientWidth = res.windowWidth,
+            rpxR = 750 / clientWidth;
+          var calc = clientHeight * rpxR - p * rpxR;
+          that.rpxR = rpxR;
+          that.winHeight = calc;
+          that.$apply();
+          resolve();
+        }
+      });
+    });
+  }
+  async onLoad() {
+    let user = wx.getStorageSync('user');
+    console.log(user);
+    if (!user) {
+      return wx.redirectTo({
+        url: 'login'
+      });
+    }
+    await this.sysInfo();
+    //  高度自适应
+    this.caclMenuScrollHeight();
+    this.selectTypeByStoreId(8);
+  }
+
+  computed = {};
+  windowHeight() {
+    return new Promise((resolve, reject) => {
+      let _this = this;
+      wx.getSystemInfo({
+        success(res) {
+          resolve(res.screenHeight);
+        }
+      });
+    });
+  }
+
+  //根据店铺标识查找店铺商品分类
+  selectTypeByStoreId(storeId) {
+    try {
+      let that = this;
+      tip.loading();
+      NetWork.wxHttp2(
+        'GET',
+        {
+          storeId
+        },
+        publicApi.selectTypeByStoreId
+      )
+        .then(res => {
+          if (res.code == 200) {
+            tip.loaded();
+
+            that.typeList = res.data;
+            that.typeId = res.data[0].typeId;
+            that.queryGoodsByTypeId(that.typeId);
+            that.$apply();
+          } else {
+            tip.loaded();
+            return tip.error(res.msg, true);
+          }
+        })
+        .catch(e => {
+          tip.loaded();
+          return tip.error(e, true);
+        });
+    } catch (error) {
+      tip.loaded();
+      return tip.error(error, true);
+    }
+  }
+
+  //根据商品分类查找商品
+  queryGoodsByTypeId(typeId) {
+    try {
+      let that = this;
+
+      NetWork.wxHttp2(
+        'GET',
+        {
+          typeId
+        },
+        publicApi.queryGoodsByTypeId
+      )
+        .then(res => {
+          if (res.code == 200) {
+            let list = res.data;
+            list.map(goods => {
+              goods.goodsList.map(item => {
+                item.imgUrl = JSON.parse(item.imgUrl);
+              });
+            });
+            that.goodsList = list;
+            that.$apply();
+          } else {
+            return tip.error(res.msg, true);
+          }
+        })
+        .catch(e => {
+          return tip.error(e, true);
+        });
+    } catch (error) {
+      return tip.error(error, true);
+    }
+  }
+}
+</script>

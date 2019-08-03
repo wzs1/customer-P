@@ -1,0 +1,142 @@
+<style lang="less">
+@import '../styles/coin';
+</style>
+<template>
+    <view class="coin">
+        <view class="coin-li" wx:for="{{gameRecords}}" wx:for-item="game">
+           <view class="li-left">
+             <view>
+               <image src="{{game.cover}}" mode="scaleToFill"
+                 lazy-load="false">
+               </image>
+             </view>
+             <view>
+               <view>{{game.storename}}</view>
+               <view>全场可用</view>
+             </view>
+           </view>
+            <view class="li-right">
+              <view>
+                <view>{{game.scores}}</view>
+                个金币
+              </view>
+              <view>可兑换￥{{game.exchangemoney}}</view>
+            </view>
+        </view>
+        <blank></blank>
+        <view wx:if="{{gameRecords.length == 0}}">暂无数据~</view>
+    </view>
+    
+</template>
+<script>
+import wepy from 'wepy';
+import blank from '@/components/blank';
+import tip from '@/utils/tip';
+import publicApi from '@/api/publicApi';
+import NetWork from '@/utils/wxHttp';
+export default class Coin extends wepy.page {
+  config = {
+    navigationBarTitleText: '我的金币',
+    backgroundTextStyle: 'light',
+    navigationBarBackgroundColor: '#66C693',
+    navigationBarTextStyle: 'white',
+    enablePullDownRefresh: true,
+    enablePullDownRefresh: true,
+    onReachBottomDistance: 50
+  };
+  components = {
+    blank: blank
+  };
+
+  data = {
+    userId: '',
+    gameRecords: [],
+    page: 1,
+    rows: 10
+  };
+
+  onLoad() {
+    let user = wx.getStorageSync('user');
+    let { miniUserId } = user;
+    this.userId = miniUserId;
+    this.queryGoldOfStore();
+  }
+
+  queryGoldOfStore() {
+    tip.loading();
+    let { userId, page, rows } = this;
+    NetWork.wxHttp2(
+      'GET',
+      {
+        userId,
+        page,
+        rows
+      },
+      publicApi.queryGoldOfStore
+    )
+      .then(res => {
+        if (res.code == 200) {
+          tip.loaded();
+          this.gameRecords = res.data;
+          this.$apply();
+        } else {
+          tip.loaded();
+          return tip.loaded();
+        }
+      })
+      .catch(e => {
+        tip.loaded();
+        return tip.error(e, true);
+      });
+  }
+
+  onPullDownRefresh() {
+    this.queryGoldOfStore();
+  }
+
+  onReachBottom() {
+    let that = this;
+    tip.loading();
+    that.page = 1;
+    NetWork.wxHttp2(
+      'GET',
+      {
+        userId: that.userId,
+        page: ++that.page,
+        rows: that.rows
+      },
+      publicApi.queryGoldOfStore
+    )
+      .then(res => {
+        if (res.code == 200) {
+          tip.loaded();
+          if (res.data.length == 0) {
+            that.hasMore = false;
+            tip.success('没有更多的数据了');
+            wx.stopPullDownRefresh(); //关闭下拉动画
+          }
+          if (res.data.length < 10) {
+            that.hasMore = false;
+            that.gameRecords = that.orderList.concat(res.data);
+            that.$apply();
+            tip.success('没有更多的数据了');
+            wx.stopPullDownRefresh(); //关闭下拉动画
+          } else {
+            that.hasMore = true;
+            that.gameRecords = that.gameRecords.concat(res.data);
+          }
+
+          //this.$apply();
+        } else {
+          tip.loaded();
+          return tip.error(res.msg);
+        }
+      })
+      .catch(e => {
+        tip.loaded();
+        return tip.error(e, true);
+      });
+  }
+}
+</script>
+

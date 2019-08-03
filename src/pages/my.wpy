@@ -1,0 +1,104 @@
+<style lang="less">
+@import '../styles/my';
+page {
+  width: 100%;
+  height: 100%;
+  background: #f8f8f8;
+}
+</style>
+
+<template>
+    <view class="my">
+        <view class="custom-info">
+            <view>
+                <image src="{{user.avatar}}" mode="scaleToFill">
+                </image>
+            </view>
+            <view>
+                <view>
+                    {{user.username}}
+                </view>
+                <view>
+                   
+                </view>
+            </view>
+        </view>
+        <view class="custom-ul-box">
+            <view class="custom-ul">
+                <navigator url="{{'order'}}" open-type="navigate" hover-class="none">
+               
+                    <view class="custom-li">
+                        <i class="iconfont icon-cart"></i>
+                        <view class="custom-li-line active">
+                            <view>
+                                我的订单
+                            </view>
+                            <i class="iconfont icon-gengduo"></i>
+                        </view>
+                    </view>
+                 </navigator>
+                 <navigator url="{{'coin'}}" open-type="navigate" hover-class="none">
+                    <view class="custom-li">
+                        <i class="iconfont icon-jinbi"></i>
+                        <view class="custom-li-line active">
+                            <view>
+                                我的金币
+                            </view>
+                            <i class="iconfont icon-gengduo"></i>
+                        </view>
+               
+                    </view>
+                 </navigator>
+                <view class="custom-li" @tap="goSellerMini">
+                    <i class="iconfont icon-ruzhu"></i>
+                    <view class="custom-li-line">
+                        <view>
+                            我要入驻
+                        </view>
+                        <i class="iconfont icon-gengduo"></i>
+                    </view>
+                </view>
+            </view>
+        </view>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+export default class My extends wepy.page {
+  config = {
+    navigationBarTitleText: '我的',
+    backgroundTextStyle: 'light',
+    navigationBarBackgroundColor: '#66C693',
+    navigationBarTextStyle: 'white',
+    disableScroll: true
+  };
+
+  data = {
+    user: {}
+  };
+
+  onLoad() {
+    let user = wx.getStorageSync('user');
+    console.log(user);
+    if (!user) {
+      return wx.redirectTo({
+        url: 'login'
+      });
+    } else {
+      this.user = user;
+    }
+  }
+
+  goSellerMini() {
+      console.log(1243)
+    wx.navigateToMiniProgram({
+      appId: 'wxe1e8fcc85a7c2738',
+      path: 'pages/index',
+
+      envVersion: 'trail'
+    });
+  }
+}
+</script>
+
